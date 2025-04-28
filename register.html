@@ -4,10 +4,10 @@
     <title>智能车库用户注册</title>
     <style>
         :root {
-            --primary-color: #2c3e50;  /* 深蓝灰主色 */
-            --accent-color: #3498db;   /* 强调蓝色 */
-            --success-color: #27ae60;  /* 成功绿色 */
-            --danger-color: #e74c3c;   /* 警示红色 */
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --danger-color: #e74c3c;
         }
 
         body {
@@ -163,7 +163,7 @@
         }
 
         .flash-message.danger::before {
-            content: "\f071"; /* 警告图标 */
+            content: "\f071";
         }
 
         .flash-message.success {
@@ -172,7 +172,24 @@
         }
 
         .flash-message.success::before {
-            content: "\f058"; /* 成功图标 */
+            content: "\f058";
+        }
+
+        /* 新增车牌号样式 */
+        #car_plate {
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: 'Courier New', monospace;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23999" d="M18.92 9.01C18.72 8.42 18.16 8 17.5 8h-11c-.66 0-1.21.42-1.42 1.01L3 15v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-1.08-5.99zM6.85 10h10.29l1.04 5.79L17.14 18H6.86l-1.04-5.79L6.85 10zM6.5 13c-.83 0-1.5.67-1.5 1.5S5.67 16 6.5 16s1.5-.67 1.5-1.5S7.33 13 6.5 13zm11 0c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zM5 4c0-1.66 1.34-3 3-3h8c1.66 0 3 1.34 3 3v2H5V4z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 24px;
+            padding-right: 40px;
+        }
+
+        input::placeholder {
+            color: #95a5a6;
+            font-size: 0.9em;
         }
 
         @keyframes slideIn {
@@ -215,15 +232,27 @@
         <form method="POST">
             <div class="input-group">
                 <label for="username">用户名</label>
-                <input type="text" id="username" name="username" required placeholder="2-16位字符">
+                <input type="text" id="username" name="username" required
+                       pattern="[\u4e00-\u9fa5a-zA-Z0-9]{2,16}"
+                       placeholder="2-16位（中英文/数字）">
             </div>
             <div class="input-group">
                 <label for="account">登录账号</label>
-                <input type="text" id="account" name="account" required placeholder="请输入账号">
+                <input type="text" id="account" name="account" required
+                       pattern="[a-zA-Z0-9]{6,20}"
+                       placeholder="6-20位字母/数字">
             </div>
             <div class="input-group">
                 <label for="password">密码</label>
-                <input type="password" id="password" name="password" required placeholder="请输入密码">
+                <input type="password" id="password" name="password" required
+                       pattern="\d{6,11}"
+                       placeholder="6-11位数字">
+            </div>
+            <div class="input-group">
+                <label for="car_plate">车牌号码</label>
+                <input type="text" id="car_plate" name="car_plate" required
+                       pattern="[京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼使领]{1}[A-HJ-NP-Z]{1}[A-HJ-NP-Z0-9]{4,5}[A-HJ-NP-Z0-9挂学警港澳]{1}"
+                       placeholder="请输入车牌号（如：京A12345）">
             </div>
             <input type="submit" value="立即注册">
         </form>
