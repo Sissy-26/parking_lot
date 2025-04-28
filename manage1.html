@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>用户管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            padding-left: 200px;
+            padding-top: 60px;
+        }
+
+        /* 左侧导航栏 */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 200px;
+            background: #2c3e50;
+            display: flex;
+            flex-direction: column;
+            padding: 20px 0;
+        }
+
+        .nav-button {
+            padding: 15px 25px;
+            margin: 8px 15px;
+            background: #34495e;
+            border: none;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .nav-button.active {
+            background: #3498db;
+        }
+
+        .nav-button:hover {
+            background: #2980b9;
+        }
+
+        .logout-btn {
+            margin-top: auto;
+            background: #e74c3c !important;
+        }
+
+        .logout-btn:hover {
+            background: #c0392b !important;
+        }
+
+        /* 顶部导航栏 */
+        .topbar {
+            position: fixed;
+            top: 0;
+            left: 200px;
+            right: 0;
+            height: 60px;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 30px;
+        }
+
+        .greeting {
+            margin-right: 20px;
+            color: #2c3e50;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #3498db url('avatar.png') center/cover;
+            cursor: pointer;
+        }
+
+        /* 内容区域 */
+        .content {
+            padding: 30px;
+        }
+
+        /* 用户信息表格 */
+        .user-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .user-table th,
+        .user-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .user-table th {
+            background: #3498db;
+            color: white;
+        }
+
+        .member-badge {
+            background: #27ae60;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        /* 黑名单列表 */
+        .blacklist-table {
+            width: 100%;
+        }
+
+        .blacklist-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .remove-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- 左侧导航 -->
+    <div class="sidebar">
+        <button class="nav-button active" data-target="user-info">用户信息管理</button>
+        <button class="nav-button" data-target="blacklist">黑名单车辆管理</button>
+        <button class="nav-button logout-btn">退出系统</button>
+    </div>
+
+    <!-- 顶部导航 -->
+    <div class="topbar">
+        <div class="greeting">祝你工作顺利！</div>
+        <div class="avatar"></div>
+    </div>
+
+    <!-- 内容区域 -->
+    <div class="content">
+        <!-- 用户信息 -->
+        <div id="user-info">
+            <table class="user-table">
+                <thead>
+                    <tr>
+                        <th>电话</th>
+                        <th>车牌号</th>
+                        <th>会员状态</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>138-1234-5678</td>
+                        <td>京A12345</td>
+                        <td><span class="member-badge">是</span></td>
+                    </tr>
+                    <tr>
+                        <td>139-8765-4321</td>
+                        <td>沪B67890</td>
+                        <td>否</td>
+                    </tr>
+                    <tr>
+                        <td>152-3344-5566</td>
+                        <td>粤C77889</td>
+                        <td><span class="member-badge">是</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 黑名单 -->
+        <div id="blacklist" style="display: none;">
+            <div class="blacklist-table">
+                <div class="blacklist-item">
+                    <div>
+                        <h3>京A12345</h3>
+                        <p>加入时间：2023-03-15 14:20</p>
+                        <p>原因：多次违规停车</p>
+                    </div>
+                    <button class="remove-btn">移出黑名单</button>
+                </div>
+
+                <div class="blacklist-item">
+                    <div>
+                        <h3>沪B44556</h3>
+                        <p>加入时间：2023-04-22 09:45</p>
+                        <p>原因：欠费超过30天</p>
+                    </div>
+                    <button class="remove-btn">移出黑名单</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 导航切换
+        const buttons = document.querySelectorAll('.nav-button');
+        const contents = {
+            'user-info': document.getElementById('user-info'),
+            'blacklist': document.getElementById('blacklist')
+        };
+
+        buttons.forEach(button => {
+            button.addEventListener('click', function() {
+                // 移除所有激活状态
+                buttons.forEach(btn => btn.classList.remove('active'));
+                // 隐藏所有内容
+                Object.values(contents).forEach(content => content.style.display = 'none');
+                
+                // 设置当前激活
+                this.classList.add('active');
+                const target = this.dataset.target;
+                if(target) {
+                    contents[target].style.display = 'block';
+                }
+            });
+        });
+
+        // 退出功能
+        document.querySelector('.logout-btn').addEventListener('click', () => {
+            if(confirm('确定要退出系统吗？')) {
+                // 实际应跳转到登出页面
+                window.location.href = '/logout';
+            }
+        });
+
+        // 头像点击（示例）
+        document.querySelector('.avatar').addEventListener('click', () => {
+            alert('用户资料设置');
+        });
+    </script>
+</body>
+</html>

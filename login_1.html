@@ -148,7 +148,6 @@
             font-weight: 500;
             text-decoration: none;
             position: relative;
-            margin-right: 155px;
         }
 
         .register-link a::after {
@@ -231,7 +230,7 @@
 </head>
 <body>
     <div class="container">
-        <h2>🔑 用户登录</h2>
+        <h2>🔑 管理员登录</h2>
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% for category, message in messages %}
             <div class="flash-message {% if category == 'danger' %}danger{% else %}success{% endif %}">
@@ -250,11 +249,7 @@
             </div>
             <input type="submit" value="立即登录">
         </form>
-        <p class="register-link">
-            没有账号？<a href="{{ url_for('register') }}" >立即注册</a>
-            <a href="{{ url_for('login_1') }}" >您是管理员？</a>
-        </p>
-          
+
     </div>
 </body>
 </html>
