@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>智能车库管理系统</title>
+    <style>
+        :root {
+            --sidebar-width: 200px;
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            margin: 0;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+            position: fixed;
+            height: 100vh;
+            transition: all 0.3s;
+        }
+
+        .sidebar-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar-menu li {
+            margin: 8px 0;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .sidebar-menu li:hover {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 30px;
+        }
+
+        .parking-spot {
+            width: 160px;
+            height: 80px;
+            background: #e8f5e9;
+            border: 2px solid #81c784;
+            border-radius: 8px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 2px 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .parking-spot::before {
+            content: '';
+            position: absolute;
+            left: -12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 40px;
+            background: #bdbdbd;
+            clip-path: polygon(100% 0, 100% 100%, 0 50%);
+        }
+
+        .parking-spot.occupied {
+            background: #ffcdd2;
+            border-color: #e57373;
+        }
+
+        .parking-spot.occupied::after {
+            content: '🚗';
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 24px;
+        }
+
+        .spot-info {
+            text-align: center;
+            z-index: 1;
+        }
+
+        .spot-number {
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: 1.2em;
+        }
+
+        .spot-coordinate {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .welcome {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+            text-align: center; /* 居中显示 */
+            font-size: 1.5em;
+        }
+        .dashboard {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .data-card {
+            background: white;
+            border-left: 4px solid var(--secondary-color);
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        button {
+            background: var(--secondary-color);
+            letter-spacing: 1px;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            opacity: 0.9;
+            transform: scale(1.05);
+        }
+
+        .garage-layout {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            background: transparent;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2>🚗车场管理</h2>
+        </div>
+        <ul class="sidebar-menu">
+            <li>实时监控</li>
+            <li>数据统计</li>
+            <li>历史记录</li>
+            <li>系统设置</li>
+        </ul>
+    </nav>
+
+    <div class="main-content">
+        <h1 class="welcome">您好！请查看车位使用情况！</h1>
+
+        <div class="dashboard">
+            <div class="data-card">
+                <h3>总车位数</h3>
+                <p id="total-spots">56</p>
+                <button onclick="updateTotalSpots()">修改总数</button>
+            </div>
+            <div class="data-card">
+                <h3>已占用车位</h3>
+                <p id="occupied-spots">20</p>
+            </div>
+            <div class="data-card">
+                <h3>剩余车位</h3>
+                <p id="available-spots">36</p>
+            </div>
+        </div>
+
+        <div class="garage-layout" id="garage-container">
+            <!-- 车位动态生成 -->
+        </div>
+    </div>
+
+    <script>
+        let totalSpots = 55;
+        let occupiedSpots = 20;
+
+        function initGarage() {
+            const container = document.getElementById('garage-container');
+            container.innerHTML = '';
+
+            const indices = Array.from({length: totalSpots}, (_, i) => i);
+            const occupiedIndices = [];
+            while(occupiedIndices.length < occupiedSpots) {
+                const randomIndex = Math.floor(Math.random() * indices.length);
+                occupiedIndices.push(indices.splice(randomIndex, 1)[0]);
+            }
+
+            for (let i = 0; i < totalSpots; i++) {
+                const spot = document.createElement('div');
+                spot.className = `parking-spot ${occupiedIndices.includes(i) ? 'occupied' : ''}`;
+
+                const row = Math.floor(i / 5) + 1;
+                const col = (i % 5) + 1;
+                spot.innerHTML = `
+                    <div class="spot-info">
+                        <div class="spot-number">${i+1}</div>
+                        <div class="spot-coordinate">区域 ${row}-${col}</div>
+                    </div>
+                `;
+
+                spot.onclick = function() {
+                    this.classList.toggle('occupied');
+                    updateOccupiedCount();
+                };
+                container.appendChild(spot);
+            }
+            updateDisplay();
+        }
+
+        function updateOccupiedCount() {
+            occupiedSpots = document.querySelectorAll('.occupied').length;
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            document.getElementById('total-spots').textContent = totalSpots;
+            document.getElementById('occupied-spots').textContent = occupiedSpots;
+            document.getElementById('available-spots').textContent = totalSpots - occupiedSpots;
+        }
+
+        function updateTotalSpots() {
+            const newTotal = prompt('请输入新的总车位数:', totalSpots);
+            if (newTotal && !isNaN(newTotal) && newTotal > 0) {
+                totalSpots = parseInt(newTotal);
+                occupiedSpots = 0;
+                initGarage();
+            }
+        }
+
+        initGarage();
+        setInterval(updateOccupiedCount, 10000);
+    </script>
+</body>
+</html>
