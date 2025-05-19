@@ -8,12 +8,14 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+
         }
 
         body {
             font-family: Arial, sans-serif;
             padding-left: 200px;
             padding-top: 60px;
+            background-color: rgba(175, 251, 160, 0.1);
         }
 
         /* 左侧导航栏 */
@@ -23,7 +25,7 @@
             top: 0;
             bottom: 0;
             width: 200px;
-            background: #2c3e50;
+            background: #388E3C;
             display: flex;
             flex-direction: column;
             padding: 20px 0;
@@ -32,7 +34,7 @@
         .nav-button {
             padding: 15px 25px;
             margin: 8px 15px;
-            background: #34495e;
+            background: #4CAF50;
             border: none;
             color: white;
             text-align: left;
@@ -42,11 +44,11 @@
         }
 
         .nav-button.active {
-            background: #3498db;
+            background: #4CAF50;
         }
 
         .nav-button:hover {
-            background: #2980b9;
+            background: #dcf5d4;
         }
 
         .logout-btn {
@@ -65,8 +67,8 @@
             left: 200px;
             right: 0;
             height: 60px;
-            background: #fff;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background: #e8f5e9;
+            box-shadow: 0 2px 5px rgba(175, 251, 160, 0.1);
             display: flex;
             align-items: center;
             justify-content: flex-end;
@@ -75,14 +77,14 @@
 
         .greeting {
             margin-right: 20px;
-            color: #2c3e50;
+            color: #0c0c0c;
         }
 
         .avatar {
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: #3498db url('avatar.png') center/cover;
+            background: #388E3C url('avatar.png') center/cover;
             cursor: pointer;
         }
 
@@ -107,11 +109,19 @@
         }
 
         .user-table th {
-            background: #3498db;
+            background: #388E3C;
             color: white;
         }
 
         .member-badge {
+            background: #27ae60;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        .edit {
             background: #27ae60;
             color: white;
             padding: 3px 8px;
@@ -134,7 +144,8 @@
             align-items: center;
         }
 
-        .remove-btn {
+        .remove-btn-user,
+        .remove-btn-blacklist {
             background: #e74c3c;
             color: white;
             border: none;
@@ -142,13 +153,82 @@
             border-radius: 3px;
             cursor: pointer;
         }
+        
+        /*添加用户*/
+        form {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+
+        form:hover {
+            transform: translateY(-3px);
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            text-align: left;
+            color: var(--primary-color);
+            margin-bottom: 0.6rem;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 90%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.9);
+        }
+
+        input:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 8px rgba(52, 152, 219, 0.2);
+            outline: none;
+        }
+
+        input[type="submit"] {
+            background: linear-gradient(135deg, var(--accent-color), #2980b9);
+            color: rgb(0, 0, 0);
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        input[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
     </style>
 </head>
 <body>
     <!-- 左侧导航 -->
     <div class="sidebar">
-        <button class="nav-button active" data-target="user-info">用户信息管理</button>
-        <button class="nav-button" data-target="blacklist">黑名单车辆管理</button>
+        <button class="nav-button active" data-target="user-info">查看用户信息</button>
+        <button class="nav-button" data-target="user-add">添加用户</button>
+        <button class="nav-button" data-target="member-add">添加会员</button>
+        <button class="nav-button" data-target="user-delete">删除用户</button>
+        <button class="nav-button" data-target="member-delete">删除会员</button>
+        <button class="nav-button" data-target="blacklist">查看黑名单车辆</button>
+        <button class="nav-button" data-target="blacklist-add">添加黑名单车辆</button>
+        <button class="nav-button" data-target="blacklist-delete">移出黑名单</button>
         <button class="nav-button logout-btn">退出系统</button>
     </div>
 
@@ -165,70 +245,358 @@
             <table class="user-table">
                 <thead>
                     <tr>
-                        <th>电话</th>
+                        <th>账号</th>
                         <th>车牌号</th>
                         <th>会员状态</th>
                     </tr>
                 </thead>
-                <tbody>
+               <tbody id="users">
                     <tr>
-                        <td>138-1234-5678</td>
-                        <td>京A12345</td>
-                        <td><span class="member-badge">是</span></td>
                     </tr>
-                    <tr>
-                        <td>139-8765-4321</td>
-                        <td>沪B67890</td>
-                        <td>否</td>
-                    </tr>
-                    <tr>
-                        <td>152-3344-5566</td>
-                        <td>粤C77889</td>
-                        <td><span class="member-badge">是</span></td>
-                    </tr>
-                </tbody>
+                </tbody> 
             </table>
         </div>
 
         <!-- 黑名单 -->
         <div id="blacklist" style="display: none;">
-            <div class="blacklist-table">
-                <div class="blacklist-item">
-                    <div>
-                        <h3>京A12345</h3>
-                        <p>加入时间：2023-03-15 14:20</p>
-                        <p>原因：多次违规停车</p>
-                    </div>
-                    <button class="remove-btn">移出黑名单</button>
-                </div>
-
-                <div class="blacklist-item">
-                    <div>
-                        <h3>沪B44556</h3>
-                        <p>加入时间：2023-04-22 09:45</p>
-                        <p>原因：欠费超过30天</p>
-                    </div>
-                    <button class="remove-btn">移出黑名单</button>
-                </div>
+            <div class="blacklist-table" id="blacklist_">
             </div>
+        </div>
+
+        <!--添加用户-->
+        <div id="user-add" style="display: none;" class="container">
+            <form id="form-user-add" method="POST" onsubmit="return false">
+            <div class="input-group">
+                <label for="username">用户名</label>
+                <input type="text" id="username" name="username" required
+                       pattern="[\u4e00-\u9fa5a-zA-Z0-9]{2,16}"
+                       placeholder="2-16位（中英文/数字）">
+            </div>
+            <div class="input-group">
+                <label for="account">登录账号</label>
+                <input type="text" id="account" name="account" required
+                       pattern="[a-zA-Z0-9]{6,20}"
+                       placeholder="6-20位字母/数字">
+            </div>
+            <div class="input-group">
+                <label for="password">密码</label>
+                <input type="password" id="password" name="password" required
+                       pattern="\d{6,11}"
+                       placeholder="6-11位数字">
+            </div>
+            <div class="input-group">
+                <label for="user_car_plate">车牌号码</label>
+                <input type="text" id="car_plate" name="car_plate" required
+                       pattern="[京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼使领]{1}[A-HJ-NP-Z]{1}[A-HJ-NP-Z0-9]{4,5}[A-HJ-NP-Z0-9挂学警港澳]{1}"
+                       placeholder="请输入车牌号（如：京A12345）">
+            </div>
+            <div class="input-group">
+                <label for="member">是否为会员</label>
+                <input type="text" id="member" name="member" required
+                placeholder="是/否">
+            </div>
+            <input type="submit" id="sub-user-add" value="添加">
+            </form>
+        </div>
+
+        <!--添加黑名单车辆-->
+        <div id="blacklist-add" style="display: none;" class="container" >
+            <form id="form-blacklist-add" method="POST" onsubmit="return false">
+            <div class="input-group">
+                <label for="blacklist_car_plate">车牌号码</label>
+                <input type="text" id="blacklist_car_plate" name="blacklist_car_plate" required
+                       pattern="[京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼使领]{1}[A-HJ-NP-Z]{1}[A-HJ-NP-Z0-9]{4,5}[A-HJ-NP-Z0-9挂学警港澳]{1}"
+                       placeholder="请输入车牌号（如：京A12345）">
+            </div>
+            <div class="input-group">
+                <label for="reason">添加原因</label>
+                <input type="text" id="reason" name="reason" required>
+            </div>
+            <input type="submit" id="sub-blacklist-add" value="添加黑名单">
+        </form>
+        </div>
+
+        <!--删除用户-->
+        <div id="user-delete" style="display: none;" class="container" >
+            <form id="form-user-delete" method="POST" onsubmit="return false">
+            <div class="input-group">
+                <label for="delete-account">请输入要删除的账户：</label>
+                <input type="text" id="delete-account" name="delete-account" required
+                       pattern="[a-zA-Z0-9]{6,20}"
+                       placeholder="6-20位字母/数字">
+            </div>
+            <input type="submit" id="sub-user-delete" value="删除用户">
+        </form>
+        </div>
+
+        <!--添加会员-->
+        <div id="member-add" style="display: none;" class="container" >
+            <form id="form-member-add" method="POST" onsubmit="return false">
+            <div class="input-group">
+                <label for="member-add-account">请输入要添加会员的账户：</label>
+                <input type="text" id="member-add-account" name="member-add-account" required
+                       pattern="[a-zA-Z0-9]{6,20}"
+                       placeholder="6-20位字母/数字">
+            </div>
+            <input type="submit" id="sub-member-add" value="添加会员">
+        </form>
+        </div>
+
+        <!--删除会员-->
+        <div id="member-delete" style="display: none;" class="container" >
+            <form id="form-member-delete" method="POST" onsubmit="return false">
+            <div class="input-group">
+                <label for="member-delete-account">请输入要删除会员的账户：</label>
+                <input type="text" id="member-delete-account" name="member-delete-account" required
+                       pattern="[a-zA-Z0-9]{6,20}"
+                       placeholder="6-20位字母/数字">
+            </div>
+            <input type="submit" id="sub-member-delete" value="删除会员">
+        </form>
+        </div>
+
+        <!--移出黑名单-->
+        <div id="blacklist-delete" style="display: none;" class="container">
+            <form id="form-blacklist-delete" method="POST" onsubmit="return false">
+            <div class="input-group">
+                <label for="delete-car-plate">请输入要移出的车牌号：</label>
+                <input type="text" id="delete_car_plate" name="delete_car_plate" required
+                       pattern="[京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼使领]{1}[A-HJ-NP-Z]{1}[A-HJ-NP-Z0-9]{4,5}[A-HJ-NP-Z0-9挂学警港澳]{1}"
+                       placeholder="请输入车牌号（如：京A12345）">
+            </div>
+            <input type="submit" id="sub-blacklist-delete" value="移出黑名单">
+        </form>
         </div>
     </div>
 
     <script>
         // 导航切换
+        const blacklist_=document.getElementById('blacklist_');
+        const users=document.getElementById('users');
         const buttons = document.querySelectorAll('.nav-button');
+        const sub_user_add=document.getElementById('sub-user-add');
+        const sub_user_delete=document.getElementById('sub-user-delete');
+        const sub_blacklist_add=document.getElementById('sub-blacklist-add');
+        const sub_blacklist_delete=document.getElementById('sub-blacklist-delete');
+        const sub_member_add=document.getElementById('sub-member-add');
+        const sub_member_delete=document.getElementById('sub-member-delete');
+        const username=document.getElementById('username');
+        const account=document.getElementById('account');
+        const member=document.getElementById('member');
+        const car_plate=document.getElementById('car_plate');
+        const password=document.getElementById('password');
+        const reason=document.getElementById('reason');
+        const delete_account=document.getElementById('delete-account');
+        const member_delete_account=document.getElementById('member-delete-account');
+        const member_add_account=document.getElementById('member-add-account');
+        const blacklist_car_palate=document.getElementById('blacklist_car_plate');
         const contents = {
             'user-info': document.getElementById('user-info'),
-            'blacklist': document.getElementById('blacklist')
+            'blacklist': document.getElementById('blacklist'),
+            'user-add':document.getElementById('user-add'),
+            'blacklist-add':document.getElementById('blacklist-add'),
+            'user-delete':document.getElementById('user-delete'),
+            'blacklist-delete':document.getElementById('blacklist-delete'),
+            'member-add':document.getElementById('member-add'),
+            'member-delete':document.getElementById('member-delete')
         };
+        sub_user_add.onclick=function(){
+            const formData='car_plate='+car_plate.value+'&account='+account.value+'&password='+password.value+'&username='+username.value+'&member='+member.value;
+                fetch('http://127.0.0.1:5000/user_add', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data){
+                        if (data=='1'){
+                            alert("添加成功！")
+                            getContents()
+                        }
+                        else if (data=="2"){
+                            alert("用户已经存在！")
+                        }
+                        else {
+                            alert("添加失败！")
+                        }
+                    }
+                    car_plate.value=" "
+                    username.value=" "
+                    account.value=" "
+                    password.value=""
+                    member.value=""
 
+                })
+            }
+        sub_user_delete.onclick=function(){
+            const formData='account='+delete_account.value;
+                fetch('http://127.0.0.1:5000/user_delete', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data){
+                        if (data=='1'){
+                            alert("删除成功！")
+                            getContents()
+                        }
+                        else if (data=="2"){
+                            alert("用户不存在！")
+                        }
+                        else {
+                            alert("删除失败！")
+                        }
+                    }
+                    delete_account.value=" "
+
+                })
+            }
+
+            sub_member_delete.onclick=function(){
+            const formData='account='+member_delete_account.value;
+                fetch('http://127.0.0.1:5000/member_delete', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data){
+                        if (data=='1'){
+                            alert("删除会员成功！")
+                            getContents()
+                        }
+                        else if (data=="2"){
+                            alert("用户不存在！")
+                        }
+                        else {
+                            alert("删除会员失败！")
+                        }
+                    }
+                    member_delete_account.value=" "
+
+                })
+            }
+
+            sub_member_add.onclick=function(){
+            const formData='account='+member_add_account.value;
+                fetch('http://127.0.0.1:5000/member_add', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data){
+                        if (data=='1'){
+                            alert("添加会员成功！")
+                            getContents()
+                        }
+                        else if (data=="2"){
+                            alert("用户不存在！")
+                        }
+                        else {
+                            alert("添加会员失败！")
+                        }
+                    }
+                    member_add_account.value=" "
+
+                })
+            }
+
+            sub_blacklist_delete.onclick=function(){
+            const formData='car_plate='+delete_car_plate.value;
+                fetch('http://127.0.0.1:5000/blacklist_delete', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data){
+                        if (data=='1'){
+                            alert("移出成功！")
+                            getContents()
+                        }
+                        else if (data=="2"){
+                            alert("该用户不在黑名单！")
+                        }
+                        else {
+                            alert("移出失败！")
+                        }
+                    }
+                    delete_car_plate.value=" "
+
+                })
+            }
+
+            sub_blacklist_add.onclick=function(){
+            const formData='car_plate='+blacklist_car_palate.value+'&reason='+reason.value;
+                fetch('http://127.0.0.1:5000/blacklist_add', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data){
+                        if (data=='1'){
+                            alert("添加成功！")
+                            getContents()
+                        }
+                        else if (data=="2"){
+                            alert("用户已在黑名单中！")
+                        }
+                        else {
+                            alert("添加失败！")
+                        }
+                    }
+                    blacklist_car_plate.value=" "
+                    reason.value=" "
+                })
+            }
+        function getContents(){
+        fetch('http://127.0.0.1:5000/users', {
+                        method: 'GET',
+                    })
+                    .then(response => response.json())
+                    .then(data =>{
+                        if(data){
+                            users.innerHTML=''
+                            for(var i=0;i<data.length;i++){
+                                var tr=document.createElement('tr');
+                                 tr.innerHTML='<td>'+data[i]['account']+'</td> <td>'+data[i]['car_plate']+'</td><td><span class="member-badge">'+data[i]['member']+'</span></td><td></td>';
+                                users.appendChild(tr);
+                            }
+                        }
+                    }) 
+        fetch('http://127.0.0.1:5000/blacklist', {
+                        method: 'GET',
+                    })
+                    .then(response => response.json())
+                    .then(data =>{
+                        if(data){
+                            blacklist_.innerHTML=''
+                            for(var i=0;i<data.length;i++){
+                                var div=document.createElement('div');
+                                 div.innerHTML='<div class="blacklist-item"> <div><h3>'+data[i]['car_plate']+'</h3><p>加入时间：'+data[i]['time']+'</p><p>原因：'+data[i]['reason']+'</p></div>';
+                                blacklist_.appendChild(div);
+                            }
+                            
+                        }
+                    }) 
+    }
+    function Refresh(){
+        getContents()
         buttons.forEach(button => {
             button.addEventListener('click', function() {
                 // 移除所有激活状态
                 buttons.forEach(btn => btn.classList.remove('active'));
                 // 隐藏所有内容
-                Object.values(contents).forEach(content => content.style.display = 'none');
-                
+                Object.values(contents).forEach(content => content.style.display = 'none');                
                 // 设置当前激活
                 this.classList.add('active');
                 const target = this.dataset.target;
@@ -237,12 +605,14 @@
                 }
             });
         });
+    }
+    Refresh();        
 
         // 退出功能
         document.querySelector('.logout-btn').addEventListener('click', () => {
             if(confirm('确定要退出系统吗？')) {
                 // 实际应跳转到登出页面
-                window.location.href = '/logout';
+                window.location.href = '/login_1';
             }
         });
 

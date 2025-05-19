@@ -30,6 +30,8 @@ def init_db():
             car_plate VARCHAR(20) NOT NULL  -- 新增车牌号字段
         )
     ''')
+
+
     conn.commit()
     conn.close()
 # 在密码验证函数后添加车牌号验证函数
@@ -67,6 +69,7 @@ def login():
         if user:
             session['username'] = user[1]  # 新增这行
             flash('登录成功！', 'success')
+            session['account']=account #新添加mxy------------------------------------------------------------------------------------------------------------------
             return redirect(url_for('success'))  # 改为重定向到success路由
         else:
             flash('账号或密码错误！', 'danger')
@@ -89,9 +92,9 @@ def login_1():
         if manager:
             flash('登录成功！', 'sucess')
             if manager[2]=='manager1':
-                return redirect(url_for('manage1'))
+                return redirect(url_for('manage1')) #这一行做了修改mxy-----------------------------------------------------------------------------
             elif manager[2]=='manager2':
-                return render_template('manage2')
+                return redirect(url_for('manage2'))   #这一行做了修改mxy-------------------------------------------------------------------------------
         else:
             flash('账号或密码错误！', 'danger')
     return render_template('login_1.html')
@@ -134,7 +137,8 @@ def register():
 @app.route('/success')
 def success():
     username = session.get('username')  # 从session获取用户名
-    return render_template('success.html', username=username)
+    account = session.get('account')    #mxy-------------------------------------------------------------------------------
+    return render_template('success.html', username=username,account=account)#account=account---------mxy--------------------------------------------
 
 @app.route('/reserve')
 def reserve():
@@ -150,13 +154,14 @@ def parking_map():
 
 @app.route('/payment')
 def payment():
-    return render_template('payment.html')
+    account=request.args.get('account')
+    return render_template('payment.html',account=account)
 
 @app.route('/appeal')
 def appeal():
     return render_template('appeal.html')
 
-#新添mxy--------------------------------------------------
+#新添mxy---------------------------------------------------------------------------------------------
 @app.route('/blacklist',methods=['GET'])
 def blacklist():
     if request.method=="GET":
@@ -181,15 +186,39 @@ def users():
     if request.method=="GET":
         conn = pymysql.connect(**DB_CONFIG)
         cursor=conn.cursor()
-        cursor.execute("select account,car_plate,member from users where account != 'manager1' and account != 'manager2' ")
+        cursor.execute("select users.account,users.car_plate,member.account from users LEFT OUTER JOIN member on ( users.account=member.account) ")
         data=cursor.fetchall()
         temp={}
         result=[]
         if data!=None:
             for i in data:
-                temp['account']=i[0]
-                temp['car_plate']=i[1]
-                temp['member']=i[2]
+                if i[0] !='manager1' and i[0] !='manager2':
+                    temp['account']=i[0]
+                    temp['car_plate']=i[1]
+                    temp['member']='是' if i[2] else '否'
+                    result.append(temp.copy())
+            return jsonify(result)
+        else:
+            return jsonify([])
+        
+
+@app.route('/historical_records',methods=['POST'])
+def historical_records():
+    if request.method=="POST":
+        account=request.form['account']
+        conn = pymysql.connect(**DB_CONFIG)
+        cursor=conn.cursor()
+        cursor.execute("select time_entry,time_exit,car_plate,price ,state from historical_records where account=%s",(account))
+        data=cursor.fetchall()
+        temp={}
+        result=[]
+        if data!=None:
+            for i in data:
+                temp['time_entry']=i[0]
+                temp['time_exit']=i[1]
+                temp['car_plate']=i[2]
+                temp['price']=i[3]
+                temp['state']=i[4]
                 result.append(temp.copy())
             return jsonify(result)
         else:
@@ -237,8 +266,12 @@ def user_add():
             conn = pymysql.connect(**DB_CONFIG)
             cursor = conn.cursor()
             # 修改插入语句
-            cursor.execute("INSERT INTO users (username, account, password, car_plate, member) VALUES (%s, %s, %s, %s,%s)",
-                           (username, account, password, car_plate,member))
+            cursor.execute("INSERT INTO users (username, account, password, car_plate) VALUES (%s, %s, %s, %s)",
+                           (username, account, password, car_plate))
+            if member == "是":
+                cursor.execute("INSERT INTO member (username, account, car_plate) VALUES (%s, %s, %s)",
+                           (username, account, car_plate))
+            
             conn.commit()
             conn.close()
             return "1"
@@ -251,10 +284,10 @@ def user_add():
 def manage1():    
     return render_template('manage1.html')  
 
-
 @app.route('/manage2', methods=['GET', 'POST'])
-def manage2(): 
+def manage2():    
     return render_template('manage2.html')
+
 
 @app.route('/user_delete', methods=['GET', 'POST'])
 def user_delete(): 
@@ -264,6 +297,7 @@ def user_delete():
         cursor = conn.cursor()
         if cursor.execute("SELECT * FROM users WHERE account=%s", (account)):
             cursor.execute("delete from users  where account= \'"+str(account)+"\'");
+            cursor.execute("delete from member  where account= \'"+str(account)+"\'");
             conn.commit()
             return "1"
         else:
@@ -285,6 +319,18 @@ def blacklist_delete():
             return "2"
     return "0"
 
+@app.route('/payment_', methods=['GET', 'POST'])
+def payment_(): 
+    if request.method == 'POST':
+        car_plate = request.form['car_plate']
+        conn = pymysql.connect(**DB_CONFIG)
+        cursor = conn.cursor()
+        if cursor.execute("update historical_records set state=1  where car_plate= \'"+str(car_plate)+"\'"):
+            conn.commit()
+            return "1"
+        else:
+            return "2"
+    return "0"
 
 @app.route('/member_delete', methods=['GET', 'POST'])
 def member_delete(): 
@@ -293,7 +339,7 @@ def member_delete():
         conn = pymysql.connect(**DB_CONFIG)
         cursor = conn.cursor()
         if cursor.execute("SELECT * FROM users WHERE account=%s", (account)):
-            cursor.execute("update users set member=\'否\' where account= \'"+str(account)+"\'");
+            cursor.execute("delete from member  where account= \'"+str(account)+"\'");
             conn.commit()
             return "1"
         else:
@@ -306,8 +352,11 @@ def member_add():
         account = request.form['account']
         conn = pymysql.connect(**DB_CONFIG)
         cursor = conn.cursor()
-        if cursor.execute("SELECT * FROM users WHERE account=%s", (account)):
-            cursor.execute("update users set member=\'是\' where account= \'"+str(account)+"\'");
+        cursor.execute("select username,car_plate from users where account=%s",(account))
+        data=cursor.fetchone()
+        if data:
+            cursor.execute("INSERT INTO member (username, account, car_plate) VALUES (%s, %s, %s)",
+                           (data[0], account, data[1]));
             conn.commit()
             return "1"
         else:
