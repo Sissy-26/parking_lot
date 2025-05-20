@@ -1,9 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash,session,jsonify
 import pymysql
 import re  # 导入正则表达式模块
-#新添mxy--------------------------------------------------
 import datetime 
-#新添mxy--------------------------------------------------
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # 用于闪现信息（flash）
 
@@ -30,6 +28,23 @@ def init_db():
             car_plate VARCHAR(20) NOT NULL  -- 新增车牌号字段
         )
     ''')
+
+#新增见创建历史记录表————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+# 创建historical_records表（如不存在）
+def init_historical_records():
+    conn = pymysql.connect(**DB_CONFIG)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS historical_records (
+            time_entry VARCHAR(255) NOT NULL,
+            time_exit VARCHAR(255) ,
+            account VARCHAR(255) NOT NULL,
+            car_plate VARCHAR(20) NOT NULL,
+            state varchar(1) NOT NULL,
+            price DECIMAL(65) 
+        )
+        ''')
+    conn.commit()
 
 
     conn.commit()
@@ -69,7 +84,7 @@ def login():
         if user:
             session['username'] = user[1]  # 新增这行
             flash('登录成功！', 'success')
-            session['account']=account #新添加mxy------------------------------------------------------------------------------------------------------------------
+            session['account']=account 
             return redirect(url_for('success'))  # 改为重定向到success路由
         else:
             flash('账号或密码错误！', 'danger')
@@ -92,9 +107,9 @@ def login_1():
         if manager:
             flash('登录成功！', 'sucess')
             if manager[2]=='manager1':
-                return redirect(url_for('manage1')) #这一行做了修改mxy-----------------------------------------------------------------------------
+                return redirect(url_for('manage1')) 
             elif manager[2]=='manager2':
-                return redirect(url_for('manage2'))   #这一行做了修改mxy-------------------------------------------------------------------------------
+                return redirect(url_for('manage2'))   
         else:
             flash('账号或密码错误！', 'danger')
     return render_template('login_1.html')
@@ -137,7 +152,7 @@ def register():
 @app.route('/success')
 def success():
     username = session.get('username')  # 从session获取用户名
-    account = session.get('account')    #mxy-------------------------------------------------------------------------------
+    account = session.get('account')    
     return render_template('success.html', username=username,account=account)#account=account---------mxy--------------------------------------------
 
 @app.route('/reserve')
@@ -161,7 +176,6 @@ def payment():
 def appeal():
     return render_template('appeal.html')
 
-#新添mxy---------------------------------------------------------------------------------------------
 @app.route('/blacklist',methods=['GET'])
 def blacklist():
     if request.method=="GET":
@@ -201,7 +215,7 @@ def users():
         else:
             return jsonify([])
         
-
+#只有/historical_records新添加-------------------------------------------------------------------------------------------
 @app.route('/historical_records',methods=['POST'])
 def historical_records():
     if request.method=="POST":
@@ -319,13 +333,15 @@ def blacklist_delete():
             return "2"
     return "0"
 
+
+#只有/payment_新添加-------------------------------------------------------------------------------------------
 @app.route('/payment_', methods=['GET', 'POST'])
 def payment_(): 
     if request.method == 'POST':
-        car_plate = request.form['car_plate']
+        account = request.form['account']
         conn = pymysql.connect(**DB_CONFIG)
         cursor = conn.cursor()
-        if cursor.execute("update historical_records set state=1  where car_plate= \'"+str(car_plate)+"\'"):
+        if cursor.execute("update historical_records set state=1  where state=0 and account= \'"+str(account)+"\'"):
             conn.commit()
             return "1"
         else:
@@ -362,9 +378,10 @@ def member_add():
         else:
             return "2"
     return "0"
-#新添mxy--------------------------------------------------
+
 
 
 if __name__ == '__main__':
     init_db()
+    init_historical_records()
     app.run(debug=True)

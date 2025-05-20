@@ -1,14 +1,186 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-    <title>停车费结算</title>
-    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <title>停车场费用结算系统</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #e8f5e9;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .fee-box {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .pending-box {
+            border: 2px solid #2E7D32;
+        }
+
+        .history-box {
+            background-color: #c8e6c9;
+        }
+
+        h2 {
+            color: #2E7D32;
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #2E7D32;
+        }
+
+        .pending-info {
+            margin: 15px 0;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 8px;
+            background-color: #f1f8e9;
+            border-radius: 5px;
+        }
+
+        .settle-btn {
+            background-color: #2E7D32;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .settle-btn:hover {
+            background-color: #1B5E20;
+        }
+
+        .history-list {
+            list-style: none;
+            padding: 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            background-color: #ffffff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .no-fee {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+        }
+
+    </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <h2>停车费结算</h2>
-        <p>这里是费用结算功能页面</p>
-        <a href="{{ url_for('success') }}" class="btn btn-outline-warning">返回主界面</a>
+    <div class="container">
+        <!--返回主界面-->
+        <div>
+            <a href="{{ url_for('success') }}" class="btn settle-btn" style="position:absolute;top:0;left:0;width: 100px;height: 20px;">返回主界面</a>
+        </div>
+        <!-- 待结算费用板块 -->
+        <div class="fee-box pending-box">
+            <h2>待结算费用</h2>
+            <div id="pendingSection">
+                <div class="no-fee">当前无待结费用</div>
+            </div>
+        </div>
+
+        <!-- 历史订单板块 -->
+        <div class="fee-box history-box">
+            <h2>历史订单</h2>
+            <ul class="history-list" id="historyList">
+            
+            </ul>
+        </div>
     </div>
+
+    <script>
+        const pendingSection = document.getElementById('pendingSection');
+        const historyList = document.getElementById('historyList'); 
+        function settlePayment() {
+            pendingSection.innerHTML = '<div class="no-fee">当前无待结费用</div>';
+            const formData="account="+"{{account}}"
+            fetch('http://127.0.0.1:5000/payment_', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data =>{
+                        if (data){
+                            alert("结算成功~")
+                        }
+                    })
+            setTimeout(getContents(),2000)
+        }
+
+    function getContents(){
+        historyList.innerHTML=''
+        const formData="account="+"{{account}}"
+        fetch('http://127.0.0.1:5000/historical_records', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data =>{
+                        if(data){
+                            for(var i=0;i<data.length;i++){
+                                if(data[i]['state']==1){
+                                const newHistoryItem = document.createElement('li');
+                                newHistoryItem.className = 'history-item';
+                                newHistoryItem.innerHTML = '<div>'+data[i]['time_entry']+'</div><div>车牌号：'+data[i]['car_plate']+'</div><div>金额：'+data[i]['price']+'</div>'
+                                historyList.appendChild(newHistoryItem)
+                                }
+                                else{
+                                    pendingSection.innerHTML = '';
+                                    if(!data[i]['price']){       
+                                       const newHistoryItem = document.createElement('li');
+                                    newHistoryItem.innerHTML = '<div class="pending-info"><div class="info-item"><span>车牌号：</span><span>'+data[i]["car_plate"]+'</span></div><div class="info-item"><span>入场时间：</span><span>'+data[i]["time_entry"]+'</span></div><div class="info-item"><span>停车时长：</span><span>等待离开停车场</span></div><div class="info-item"><span>应付金额：</span><span style="color: #2E7D32; font-weight: bold;">'+data[i]["price"]+'</span></div></div><button class="settle-btn" onclick="settlePayment()" style="color:grey;">立即结算</button>'
+                                    pendingSection.appendChild(newHistoryItem)
+
+                                }
+                                    else {
+                                    const time_entry=new Date(data[i]['time_entry'])
+                                    const timestamp_entry=time_entry.getTime()
+                                    const timestamp_now=Date.now()
+                                    duration=(timestamp_now-timestamp_entry)/1000
+                                    const h=Math.floor(duration/3600)
+                                    const m=Math.floor(duration%3600/60)
+                                    const s=duration%3600%60
+                                    const newHistoryItem = document.createElement('div');
+                                    newHistoryItem.innerHTML = '<div class="pending-info"><div class="info-item"><span>车牌号：</span><span>'+data[i]["car_plate"]+'</span></div><div class="info-item"><span>入场时间：</span><span>'+data[i]["time_entry"]+'</span></div><div class="info-item"><span>停车时长：</span><span>'+h+'小时'+m+'分钟'+s+'秒'+'</span></div><div class="info-item"><span>应付金额：</span><span style="color: #2E7D32; font-weight: bold;">'+data[i]["price"]+'</span></div></div><button class="settle-btn" onclick="settlePayment()"  >立即结算</button>'
+                                    pendingSection.appendChild(newHistoryItem)
+
+                                }
+                                }
+                                
+                            }
+                        }
+                    }) 
+    }                   
+    getContents()               
+    </script>
 </body>
 </html>
