@@ -1,0 +1,46 @@
+<!-- templates/appeal.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>申诉入口</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .appeal-form {
+            max-width: 600px;
+            margin: 30px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="mb-4">停车问题申诉</h2>
+        <div class="appeal-form">
+            <form>
+                <div class="mb-3">
+                    <label class="form-label">申诉类型</label>
+                    <select class="form-select">
+                        <option>费用异常</option>
+                        <option>车位争议</option>
+                        <option>设备故障</option>
+                        <option>其他问题</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">问题描述</label>
+                    <textarea class="form-control" rows="4" placeholder="请详细描述您的问题"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">联系方式</label>
+                    <input type="text" class="form-control" placeholder="请输入手机号">
+                </div>
+                <button type="submit" class="btn btn-danger">提交申诉</button>
+                <a href="{{ url_for('success') }}" class="btn btn-outline-secondary ms-2">返回主界面</a>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
+
